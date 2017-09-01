@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>
+      Tasks
+    </h1>
+    <ol class="breadcrumb">
+      <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li class="active">Tasks</li>
+    </ol>
+  </section>
+
+  <!-- Main content -->
+	<section class="content">
+
+        {% if workingTask != None %}
+        <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="fa fa-hourglass-half"></i></span>
+
+            <div class="info-box-content">
+                <span class="info-box-text">Working On</span>
+                <span class="info-box-text"><strong>{{ workingTask.1 }}</strong></span>
+            </div>
+        </div>
+        {% endif %}
+
+		<div class="row">
+			<div class="col-md-6">
+				<div class="box box-primary">
+					<div class="box-header with-border">
+						<h3 class="box-title">New Task</h3>
+					</div>
+					<form role="form" method="post" action="add_task">
+						<div class="box-body">
+							<div class="form-group">
+								<label for="task_details_id">Task Details</label>
+								<input type="text" class="form-control" id="task_details_id" placeholder="Your task details" name="task_details" />
+							</div>
+						</div>
+						<div class="box-footer">
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</form>
+				</div>
+
+				<div class="box box-success">
+					<div class="box-header">
+						<h3 class="box-title">Done!</h3>
+					</div>
+					<div class="box-body no-padding">
+						<table class="table">
+							<tr>
+								<th style="width: 10px">#</th>
+								<th>Task</th>
+								<th>Created On</th>
+                                <th>Done At</th>
+                                <th>Delete</th>
+							</tr>
+							{% for doneTask in doneTasks %}
+							<tr>
+								<td>{{ loop.index }}.</td>
+								<td>{{ doneTask.1 }}</td>
+                                <td>{{ doneTask.2 }}</td>
+                                <td>{{ doneTask.4 }}</td>
+                                <td><a href="delete_task?task_id={{ doneTask.0 }}" class="btn btn-block btn-danger btn-sm">Delete</a></td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div class="box box-danger">
+					<div class="box-header">
+						<h3 class="box-title">TODO</h3>
+					</div>
+		            <div class="box-body no-padding">
+						<table class="table">
+		                	<tr>
+								<th style="width: 10px">#</th>
+								<th>Task</th>
+								<th>Start</th>
+								<th>Done</th>
+								<th>Delete</th>
+								<th>Created On</th>
+							</tr>
+							{% for task in tasks %}
+							<tr>
+								<td>{{ loop.index }}.</td>
+								<td>{{ task.1 }}</td>
+                                {% if task.5 == 'N' %}
+								<td><a href="start_task?task_id={{ task.0 }}" class="btn btn-block btn-primary btn-sm">Start</a></td>
+                                {% else %}
+                                <td><a href="stop_task?task_id={{ task.0 }}" class="btn btn-block btn-warning btn-sm">Stop</a></td>
+                                {% endif %}
+								<td><a href="task_done?task_id={{ task.0 }}" class="btn btn-block btn-success btn-sm">Done</a></td>
+								<td><a href="delete_task?task_id={{ task.0 }}" class="btn btn-block btn-danger btn-sm">Delete</a></td>
+								<td>{{ task.2 }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+  <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+{% endblock %}
