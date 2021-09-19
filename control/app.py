@@ -2,25 +2,32 @@ from flask import Flask, render_template, request, make_response, redirect;
 from user import User;
 import sqlite3;
 from time import strftime;
-import md5;
+import hashlib;
 
 app = Flask( __name__ );
 app.debug = True;
 
 user = User();
 
-connection = sqlite3.connect( 'data.db' );
-cursor = connection.cursor();
+def getConnection():
+	connection = sqlite3.connect( 'data.db' );
+	cursor = connection.cursor();
+	
+	return ( connection, cursor )
 
 # ... #
 
 def isInstalled():
+	( connection, cursor ) = getConnection();
+	
 	cursor.execute( "SELECT COUNT( 1 ) FROM USERS" );
 	hasUser = cursor.fetchone()[ 0 ];
 
 	return ( hasUser > 0 );
 
 def addRequest( reqType ):
+	( connection, cursor ) = getConnection();
+	
 	creationDate = strftime( '%d-%m-%Y %H:%M:%S' );
 
 	cursor.execute( "INSERT INTO UPDATE_REQUESTS( UPDATE_TYPE, DONE, CREATION_DATE ) VALUES ( ?, 'N', ? )", [ reqType, creationDate ]  );
@@ -59,14 +66,15 @@ def main():
 
 @app.route( '/install', methods = [ 'POST' ] )
 def install():
+	( connection, cursor ) = getConnection();
+	
 	if isInstalled():
 		return render_template( 'installer_message.html', message = 'PrettyPi Already Installed', type = 'danger' );
 
 	if not request.form[ 'username' ] or not request.form[ 'password' ] or not request.form[ 'name' ]:
 		return render_template( 'installer_message.html', message = 'Please fill all fields', type = 'danger' );
 
-	hashFunction = md5.new();
-	hashFunction.update( request.form[ 'password' ] );
+	hashFunction = hashlib.md5( request.form[ 'password' ].encode( 'utf-8' ) );
 
 	hashedPassword = hashFunction.hexdigest();
 
@@ -81,7 +89,7 @@ def install():
 @app.route( '/login', methods = [ 'POST' ] )
 def login():
 	user.setUsername( request.form[ 'username' ] );
-	user.setPassword( request.form[ 'password' ] );
+	user.setPassword( request.form[ 'password' ].encode( 'utf-8' ) );
 
 	if user.hasPermission():
 		response = make_response( redirect( '/' ) );
@@ -106,6 +114,8 @@ def logout():
 
 @app.route( '/tasks' )
 def tasksMain():
+	( connection, cursor ) = getConnection();
+	
 	cursor.execute( "SELECT * FROM TODO WHERE DONE = 'N' ORDER BY CREATION_DATE DESC" );
 
 	tasks = cursor.fetchall();
@@ -122,7 +132,7 @@ def tasksMain():
 
 	workingTask = cursor.fetchone();
 
-	print workingTask;
+	print( workingTask );
 
 	# ... #
 
@@ -132,6 +142,8 @@ def tasksMain():
 
 @app.route( '/add_task', methods = [ 'POST' ] )
 def newTask():
+	( connection, cursor ) = getConnection();
+	
 	if not request.form[ 'task_details' ]:
 		return render_template( 'message.html', message = 'The details should not be empty', type = 'warning' );
 
@@ -149,6 +161,8 @@ def newTask():
 
 @app.route( '/delete_task', methods = [ 'GET' ] )
 def deleteTask():
+	( connection, cursor ) = getConnection();
+	
 	taskId = request.args.get( 'task_id', None );
 
 	if taskId is None:
@@ -165,6 +179,8 @@ def deleteTask():
 
 @app.route( '/task_done', methods = [ 'GET' ] )
 def markTaskAsDone():
+	( connection, cursor ) = getConnection();
+	
 	taskId = request.args.get( 'task_id', None );
 
 	if taskId is None:
@@ -182,6 +198,8 @@ def markTaskAsDone():
 
 @app.route( '/start_task', methods = [ 'GET' ] )
 def startWorkingOnTask():
+	( connection, cursor ) = getConnection();
+	
 	taskId = request.args.get( 'task_id', None );
 
 	if taskId is None:
@@ -215,6 +233,8 @@ def startWorkingOnTask():
 
 @app.route( '/stop_task', methods = [ 'GET' ] )
 def stopWorkingOnTask():
+	( connection, cursor ) = getConnection();
+	
 	taskId = request.args.get( 'task_id', None );
 
 	if taskId is None:
